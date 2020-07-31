@@ -1,16 +1,18 @@
 require 'rails_helper'
 
-describle RaffleService do
+describe RaffleService do
+
   before :each do
     @campaign = create(:campaign, status: :pending)
   end
 
-  describle '#call' do
+  describe '#call' do
     context "when has more then two members" do
       before(:each) do
         create(:member, campaign: @campaign)
         create(:member, campaign: @campaign)
         create(:member, campaign: @campaign)
+        @campaign.reload
 
         @results = RaffleService.new(@campaign).call
       end
@@ -26,11 +28,13 @@ describle RaffleService do
 
       it "all member are in results as a friend" do
         result_friends = @results.map {|r| r.last}
-        expect(result_friends.sort).to eq(@campaign.member.sort)
+        expect(result_friends.sort).to eq(@campaign.members.sort)
       end
 
-      xit "a member don't get a member y that get the member x" do
-        # Desafio
+      it "a member don't get yourself" do
+        @results.each do |r|
+          expect(r.first).not_to eq(r.last)
+        end
       end
     end
 
@@ -38,11 +42,11 @@ describle RaffleService do
       before(:each) do
         create(:member, campaign: @campaign)
         @campaign.reload
-        
+
         @response = RaffleService.new(@campaign).call
       end
 
-      it "retorns false" do
+      it "raise error" do
         expect(@response).to eql(false)
       end
     end
