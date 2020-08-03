@@ -1,48 +1,45 @@
 require 'rails_helper'
 
 RSpec.describe CampaignsController, type: :controller do
-  include Devise::test::ControllerHelpers
+  include Devise::Test::ControllerHelpers
 
   before(:each) do
-    # request.ENV["HTTP_ACCEPT"] = 'application/json'
-
-    @request.env['devise.mapping'] = Devise.mappings[:user]
+    @request.env["devise.mapping"] = Devise.mappings[:user]
     @current_user = FactoryBot.create(:user)
     sign_in @current_user
   end
 
   describe "GET #index" do
-    it 'returns http success' do
+    it "returns http success" do
       get :index
-
       expect(response).to have_http_status(:success)
     end
   end
 
   describe "GET #show" do
-    context 'campaing exests' do
-      context 'User is owner of the campaing' do
-        it 'returns success' do
-          campaign = create(:campaign, user: @current_user)
-          get :show, params: { id: campaign.id }
 
+    context "campaing exists" do
+      context "User is the owner of the campaing" do
+        it "Returns success" do
+          campaign = create(:campaign, user: @current_user)
+          get :show, params: {id: campaign.id}
           expect(response).to have_http_status(:success)
+        end
+      end
+
+      context "User is not the owner of the campaign" do
+        it "Redirects to root" do
+          campaign = create(:campaign)
+          get :show, params: {id: campaign.id}
+
+          expect(response).to redirect_to('/')
         end
       end
     end
 
-    context 'User is not the owner of campaign' do
-      it 'Redirect to root' do
-        campaign = create(:campaign)
-        get :show, params: { id: campaign.id }
-
-        expect(response).to redirect_to('/')
-      end
-    end
-
-    context 'campaign does not exists' do
-      it 'Redirect to root' do
-        get :show, params: { id: 0 }
+    context "campaign don't exists" do
+      it "Redirects to root" do
+        get :show, params: {id: 0}
         expect(response).to redirect_to('/')
       end
     end
@@ -50,19 +47,19 @@ RSpec.describe CampaignsController, type: :controller do
 
   describe "POST #create" do
     before(:each) do
-      @campaign_attributes = attributes_for(:campaign, user: 'current_user')
-      post :create, params: { campaign: @campaign_attributes }
+      @campaign_attributes = attributes_for(:campaign, user: @current_user)
+      post :create, params: {campaign: @campaign_attributes}
     end
 
     it "Redirect to new campaign" do
       expect(response).to have_http_status(302)
-      expect(response).to redirect_to("campaign/#{Campaign.last.id}")
+      expect(response).to redirect_to("/campaigns/#{Campaign.last.id}")
     end
 
     it "Create campaign with right attributes" do
       expect(Campaign.last.user).to eql(@current_user)
-      expect(Campaign.last.title).to eql(@campaign_attributes[:title])
-      expect(Campaign.last.description).to eql(@campaign_attributes[:description])
+      expect(Campaign.last.title).to eql("Nova Campanha")
+      expect(Campaign.last.description).to eql("Descreva sua campanha...")
       expect(Campaign.last.status).to eql('pending')
     end
 
